@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F28A6C">
+<title>Baby Moves — Phase 0 Voice Test</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+:root{--coral:#F28A6C;--cream:#FFF7F0;--peach:#FCE4D8;--brown:#8A4939;--sage:#E9F2E6;--amber:#F9E7D0;--ink:#392c27;--muted:#796b65;--line:#ecd9ce}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+.app{max-width:520px;min-height:100dvh;margin:0 auto;padding:env(safe-area-inset-top) 18px calc(22px + env(safe-area-inset-bottom));}
+header{padding:22px 2px 16px} .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--brown)}
+h1,h2,.number,button{font-family:Montserrat,Inter,sans-serif}h1{font-size:25px;line-height:1.2;margin:7px 0 8px}p{line-height:1.5;font-size:14px;margin:8px 0;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:17px;margin:12px 0;box-shadow:0 5px 18px #8a49390a}
+.status{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}.dot{width:10px;height:10px;border-radius:50%;background:#b6a9a3}.dot.good{background:#56845a}.dot.warn{background:#c78b38}.dot.bad{background:#b84c3d}
+button,select{width:100%;border:0;border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--coral);color:#fff}.secondary{background:var(--peach);color:var(--brown)}.neutral{background:#f4efeb;color:var(--ink)}.danger{background:#fae7e3;color:#8b352c}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.small{font-size:12px}.tag{display:inline-block;background:var(--sage);border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;color:#426b45}
+select{border:1px solid var(--line);background:#fff;margin-top:8px}
+.result{padding:10px 12px;border-radius:12px;background:#faf6f2;font-size:13px;overflow-wrap:anywhere;margin-top:8px}
+.result.ok{background:var(--sage)}.result.no{background:#fff1eb}.number{font-size:46px;font-weight:800;color:var(--brown);text-align:center;line-height:1.1;margin:12px 0 4px}
+.log{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow:auto}.logitem{font-size:12px;padding:9px 10px;border-radius:10px;background:#faf6f2;overflow-wrap:anywhere}.logitem b{color:var(--brown)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45;margin:10px 0}.check input{margin-top:3px}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+footer{font-size:11px;color:var(--muted);line-height:1.5;padding:8px 3px}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+  <div class="eyebrow">Baby Moves · Phase 0</div>
+  <h1>Voice recognition feasibility test</h1>
+  <p>This is a temporary diagnostic page to test browser speech recognition on the actual phone. It is not the movement-tracking app and does not save test transcripts.</p>
+</header>
+<section class="card">
+  <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Not started</span></div>
+  <div class="result" id="supportResult">Checking browser support…</div>
+  <p class="small">Secure context: <b id="secure">checking…</b> · Browser: <b id="browser">checking…</b></p>
+  <label for="language" class="small"><b>Recognition language</b></label>
+  <select id="language">
+    <option value="en-IN">English (India) — en-IN</option>
+    <option value="en-US">English (US) — en-US</option>
+    <option value="hi-IN">Hindi — hi-IN</option>
+  </select>
+  <div class="row">
+    <button class="primary" id="start">Start listening</button>
+    <button class="secondary" id="stop" disabled>Stop listening</button>
+  </div>
+  <p class="small">Keep this page open and the screen on for the first test. The browser may ask for microphone permission.</p>
+</section>
+<section class="card">
+  <div class="eyebrow">Command matching</div>
+  <div class="number" id="count">0</div>
+  <p style="text-align:center">Test movements accepted</p>
+  <div class="result" id="lastResult">No final speech result yet.</div>
+  <p class="small">Only the exact approved phrases below count. Longer sentences, partial results and unknown phrases should be ignored.</p>
+  <div class="row">
+    <button class="neutral" id="manual">Manual test +1</button>
+    <button class="neutral" id="reset">Reset test count</button>
+  </div>
+</section>
+<section class="card">
+  <div class="eyebrow">Exact phrases to test</div>
+  <p>Say one phrase at a time, with a short pause between each.</p>
+  <div class="result">“Baby kicked” · “Kick” · “Count one”</div>
+  <div class="result">“Undo” · “Pause monitoring” · “Resume monitoring”</div>
+  <div class="result">“End session” · “Repeat count” · “Help”</div>
+  <hr>
+  <div class="eyebrow">Expected checks</div>
+  <label class="check"><input type="checkbox"> Each clear exact phrase is recognized and matched correctly.</label>
+  <label class="check"><input type="checkbox"> Unknown speech does not change the test count.</label>
+  <label class="check"><input type="checkbox"> Saying a longer sentence containing “kick” does not add a count.</label>
+  <label class="check"><input type="checkbox"> Listening status changes accurately when stopped or interrupted.</label>
+  <label class="check"><input type="checkbox"> Recognition can be stopped and restarted without refreshing the page.</label>
+</section>
+<section class="card">
+  <div class="eyebrow">Background / lock-screen test log</div>
+  <p>After the on-screen test passes, start listening, lock the phone for 30–60 seconds, then unlock it and check whether recognition stayed active, stopped, or reported an error. Repeat 3 times. Do not assume it listened while locked just because the UI still says “listening”.</p>
+  <div class="row">
+    <button class="secondary" id="markLock">Mark lock test</button>
+    <button class="neutral" id="clearLog">Clear log</button>
+  </div>
+  <div class="log" id="log" aria-live="polite" style="margin-top:10px"></div>
+</section>
+<section class="card" style="background:var(--amber);border-color:#f1d7b6">
+  <b>Privacy and safety</b>
+  <p style="color:#6f5541">This page does not persist transcripts or send them to Baby Moves servers. The browser’s speech-recognition implementation may process audio using a browser/vendor service; this test does not guarantee offline recognition. Do not use this test page for clinical decisions. Baby movement changes should be discussed with the maternity unit promptly.</p>
+</section>
+<footer>Test records exist only in this page's current memory and disappear when it is reloaded. Results should be written down manually for the feasibility decision.</footer>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null, listening = false, intentionalStop = false, count = 0, restartTimer = null;
+  const commands = new Set(["baby kicked","kick","count one","undo","pause monitoring","resume monitoring","end session","repeat count","help"]);
+  const log = (message) => {
+    const el = document.createElement("div");
+    el.className = "logitem";
+    const time = new Date().toLocaleTimeString();
+    el.innerHTML = `<b>${time}</b> — ${escapeHtml(message)}`;
+    $("log").prepend(el);
+  };
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function setStatus(text,kind="") {
+    $("statusText").textContent = text;
+    $("statusDot").className = "dot " + kind;
+  }
+  function setCount(n){count=n;$("count").textContent=String(count);}
+  function normalize(s){return s.toLocaleLowerCase().trim().replace(/[.!?,;:]+$/g,"").replace(/\s+/g," ");}
+  function createRecognition(){
+    if(!Recognition) return null;
+    const r = new Recognition();
+    r.lang = $("language").value;
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    r.onstart = () => {listening=true; intentionalStop=false; $("start").disabled=true; $("stop").disabled=false; setStatus("Recognition started","good"); log("Recognition started");};
+    r.onresult = (event) => {
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const result=event.results[i], transcript=result[0]?.transcript || "";
+        if(!result.isFinal){
+          $("lastResult").textContent = "Partial (ignored): “"+transcript+"”";
+          continue;
+        }
+        const phrase=normalize(transcript);
+        $("lastResult").textContent = "Final: “"+transcript+"” → "+(commands.has(phrase)?"exact command match":"ignored (not an exact command)");
+        log("Final result: “"+transcript+"” → "+(commands.has(phrase)?"exact match: "+phrase:"ignored"));
+        if(phrase==="baby kicked" || phrase==="kick" || phrase==="count one"){
+          setCount(count+1); playTone(); log("Movement command accepted; test count = "+count);
+        }
+      }
+    };
+    r.onerror = (event) => {
+      const msg = "Recognition error: "+event.error+(event.message?" — "+event.message:"");
+      setStatus(msg,"bad"); log(msg);
+      if(event.error==="not-allowed" || event.error==="service-not-allowed" || event.error==="audio-capture") {
+        listening=false; $("start").disabled=false; $("stop").disabled=true;
+      }
+    };
+    r.onend = () => {
+      listening=false; $("start").disabled=false; $("stop").disabled=true;
+      if(intentionalStop){setStatus("Stopped by user","");log("Recognition ended intentionally");}
+      else {setStatus("Recognition ended / interrupted","warn");log("Recognition ended unexpectedly; background support may be limited");}
+    };
+    return r;
+  }
+  function playTone(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      osc.type="sine";osc.frequency.value=880;gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12,ctx.currentTime+0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.16);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+0.17);
+      osc.onended=()=>ctx.close();
+    }catch(e){log("Tone could not play: "+e.message);}
+  }
+  $("secure").textContent = window.isSecureContext ? "Yes" : "No";
+  $("browser").textContent = navigator.userAgent;
+  if(!Recognition){
+    $("supportResult").className="result no";
+    $("supportResult").textContent="SpeechRecognition is not exposed by this browser. Try current Chrome on Android or Safari on iPhone, then record the result.";
+    $("start").disabled=true; setStatus("Unsupported in this browser","bad");
+  } else {
+    $("supportResult").className="result ok";
+    $("supportResult").textContent="SpeechRecognition API detected. This does not guarantee the recognition service is available or supports background use.";
+  }
+  $("start").addEventListener("click",()=>{
+    if(!Recognition)return;
+    if(listening)return;
+    try{
+      recognition=createRecognition();
+      recognition.start();
+      setStatus("Starting recognition…","warn");
+    }catch(e){setStatus("Could not start: "+e.message,"bad");log("Start failure: "+e.message);}
+  });
+  $("stop").addEventListener("click",()=>{
+    intentionalStop=true;
+    try{recognition?.stop();}catch(e){log("Stop error: "+e.message);}
+    listening=false; $("start").disabled=false; $("stop").disabled=true; setStatus("Stopping…","");
+  });
+  $("language").addEventListener("change",()=>{
+    if(listening){log("Language changed; stop and restart to apply the new language.");}
+  });
+  $("manual").addEventListener("click",()=>{setCount(count+1);playTone();log("Manual test +1; test count = "+count);});
+  $("reset").addEventListener("click",()=>{setCount(0);log("Test count reset");});
+  $("markLock").addEventListener("click",()=>{log("User marked a lock-screen test checkpoint. Compare whether recognition continued after unlock.");});
+  $("clearLog").addEventListener("click",()=>{$("log").replaceChildren();});
+  document.addEventListener("visibilitychange",()=>{
+    log("Page visibility changed: "+document.visibilityState);
+    if(document.visibilityState==="hidden") setStatus("Page hidden — recognition may stop","warn");
+    else if(listening) setStatus("Page visible; verify recognition is still active","warn");
+  });
+  window.addEventListener("pagehide",()=>{log("Page hidden/unloaded");});
+})();
+</script>
+</body>
+</html>
