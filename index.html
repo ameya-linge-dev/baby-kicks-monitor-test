@@ -29,7 +29,7 @@ footer{font-size:11px;color:var(--muted);line-height:1.5;padding:8px 3px}
 <body>
 <main class="app">
 <header>
-  <div class="eyebrow">Baby Moves · Phase 0</div>
+  <div class="eyebrow">Baby Moves · Phase 0 · Test v2</div>
   <h1>Voice recognition feasibility test</h1>
   <p>This is a temporary diagnostic page to test browser speech recognition on the actual phone. It is not the movement-tracking app and does not save test transcripts.</p>
 </header>
@@ -93,7 +93,7 @@ footer{font-size:11px;color:var(--muted);line-height:1.5;padding:8px 3px}
 (() => {
   const $ = id => document.getElementById(id);
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let recognition = null, listening = false, intentionalStop = false, count = 0, restartTimer = null;
+  let recognition = null, listening = false, intentionalStop = false, shouldListen = false, count = 0, restartTimer = null, lastError = null;
   const commands = new Set(["baby kicked","kick","count one","undo","pause monitoring","resume monitoring","end session","repeat count","help"]);
   const log = (message) => {
     const el = document.createElement("div");
@@ -133,16 +133,45 @@ footer{font-size:11px;color:var(--muted);line-height:1.5;padding:8px 3px}
       }
     };
     r.onerror = (event) => {
-      const msg = "Recognition error: "+event.error+(event.message?" — "+event.message:"");
-      setStatus(msg,"bad"); log(msg);
-      if(event.error==="not-allowed" || event.error==="service-not-allowed" || event.error==="audio-capture") {
-        listening=false; $("start").disabled=false; $("stop").disabled=true;
+      lastError = event.error || "unknown";
+      const msg = "Recognition error: "+lastError+(event.message?" — "+event.message:"");
+      log(msg);
+      if(["not-allowed","service-not-allowed","audio-capture"].includes(lastError)) {
+        shouldListen=false;
+        listening=false;
+        setStatus(msg,"bad");
+        $("start").disabled=false;
+        $("stop").disabled=true;
+      } else {
+        setStatus(msg+"; checking whether it can restart","warn");
       }
     };
     r.onend = () => {
-      listening=false; $("start").disabled=false; $("stop").disabled=true;
-      if(intentionalStop){setStatus("Stopped by user","");log("Recognition ended intentionally");}
-      else {setStatus("Recognition ended / interrupted","warn");log("Recognition ended unexpectedly; background support may be limited");}
+      listening=false;
+      if(intentionalStop || !shouldListen) {
+        $("start").disabled=false; $("stop").disabled=true;
+        setStatus("Stopped by user","");
+        log("Recognition ended intentionally");
+        return;
+      }
+      // Some browsers end a recognition session after a short utterance.
+      // For this diagnostic page, attempt a controlled restart while the user
+      // has explicitly asked to keep listening. This does not prove true
+      // continuous/background microphone operation.
+      setStatus("Recognition session ended; attempting restart…","warn");
+      log("Recognition ended; auto-restart scheduled (last error: "+(lastError || "none")+")");
+      clearTimeout(restartTimer);
+      restartTimer=setTimeout(()=>{
+        if(!shouldListen) return;
+        try {
+          recognition=createRecognition();
+          recognition.start();
+        } catch(e) {
+          setStatus("Restart failed: "+e.message,"bad");
+          log("Restart failure: "+e.message);
+          $("start").disabled=false; $("stop").disabled=true;
+        }
+      },800);
     };
     return r;
   }
@@ -170,14 +199,24 @@ footer{font-size:11px;color:var(--muted);line-height:1.5;padding:8px 3px}
   $("start").addEventListener("click",()=>{
     if(!Recognition)return;
     if(listening)return;
+    shouldListen=true;
+    intentionalStop=false;
+    lastError=null;
+    clearTimeout(restartTimer);
     try{
       recognition=createRecognition();
       recognition.start();
       setStatus("Starting recognition…","warn");
-    }catch(e){setStatus("Could not start: "+e.message,"bad");log("Start failure: "+e.message);}
+    }catch(e){
+      shouldListen=false;
+      setStatus("Could not start: "+e.message,"bad");
+      log("Start failure: "+e.message);
+    }
   });
   $("stop").addEventListener("click",()=>{
     intentionalStop=true;
+    shouldListen=false;
+    clearTimeout(restartTimer);
     try{recognition?.stop();}catch(e){log("Stop error: "+e.message);}
     listening=false; $("start").disabled=false; $("stop").disabled=true; setStatus("Stopping…","");
   });
